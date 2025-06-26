@@ -1,40 +1,53 @@
 import json
 import os
 
-TASKS_FILE = "tasks.json"
+TASKS_FILE = 'tasks.json'
 
-# Load tasks from the file, or start with an empty list
 def load_tasks():
     if os.path.exists(TASKS_FILE):
-        with open(TASKS_FILE, "r") as f:
-            return json.load(f)
+        try:
+            with open(TASKS_FILE, 'r') as file:
+                return json.load(file)
+        except json.JSONDecodeError:
+            # File is empty or corrupted, return empty list
+            return []
     return []
 
-# Save current tasks to the file
 def save_tasks(tasks):
-    with open(TASKS_FILE, "w") as f:
-        json.dump(tasks, f, indent=2)
+    with open(TASKS_FILE, 'w') as file:
+        json.dump(tasks, file, indent=2)
 
-# Initialize tasks from file
-tasks = load_tasks()
-
-def add_task(description):
-    task = {"description": description, "done": False}
-    tasks.append(task)
+def add_task(title):
+    tasks = load_tasks()
+    tasks.append({"title": title, "done": False})
     save_tasks(tasks)
-    print(f"✅ Added: {description}")
+    print(f"✅ Task added: {title}")
 
 def list_tasks():
+    tasks = load_tasks()
     if not tasks:
         print("📭 No tasks found.")
-    for i, task in enumerate(tasks, 1):
-        status = "✅" if task["done"] else "❌"
-        print(f"{i}. [{status}] {task['description']}")
-
-def complete_task(index):
-    if 0 <= index < len(tasks):
-        tasks[index]["done"] = True
-        save_tasks(tasks)
-        print(f"🎉 Completed: {tasks[index]['description']}")
     else:
-        print("⚠️ Invalid task number.")
+        for i, task in enumerate(tasks, 1):
+            title = task.get("title", "Untitled")
+            done = task.get("done", False)
+            status = "✅" if done else "❌"
+            print(f"{i}. {title} [{status}]")
+
+def complete_task(task_number):
+    tasks = load_tasks()
+    if 0 < task_number <= len(tasks):
+        tasks[task_number - 1]["done"] = True
+        save_tasks(tasks)
+        print(f"🎉 Marked as complete: {tasks[task_number - 1]['title']}")
+    else:
+        print("❌ Invalid task number.")
+
+def delete_task(task_number):
+    tasks = load_tasks()
+    if 0 < task_number <= len(tasks):
+        removed = tasks.pop(task_number - 1)
+        save_tasks(tasks)
+        print(f"🗑️ Deleted task: {removed['title']}")
+    else:
+        print("❌ Invalid task number.")
